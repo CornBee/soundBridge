@@ -1,3 +1,6 @@
-uvicorn[standard]==0.20.0
-gunicorn==20.1.0
-fastapi[all]==0.88.0
+uvicorn==0.23.2
+fastapi==0.100.1
+SQLAlchemy==2.0.19
+itsdangerous==2.1.2
+httpx==0.23.3
+Authlib==1.2.1
