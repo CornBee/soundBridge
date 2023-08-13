@@ -1,2 +1,4 @@
-cd ./devcontainer
-docker-compose up --build
+# docker operation
+
+- cd ./devcontainer
+- docker-compose up --build
