@@ -1,72 +1,116 @@
-from fastapi import APIRouter, HTTPException, Request
-from authlib.integrations.starlette_client import OAuth
-from initialize_db import session
-from models import User
-from typing import Optional, Tuple
-import json
+from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi.responses import RedirectResponse
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport import requests as google_requests
+from sqlalchemy.orm import Session
+from config import GOOGLE_CLIENT_ID, REDIRECT_URI, GOOGLE_CLIENT_SECRET
+from database import get_db
+from models import User, InvitedEmail, InviteHistory
+import os
+from typing import List
 
 router = APIRouter()
 
-with open("OAuth_20.json", "r") as file:
-    OAuth_20 = json.load(file)
+# Google Oauth2 설정 값을 환경변수로부터 불러옵니다.
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-# OAuth 설정
-oauth = OAuth()
-CONF_URL = "https://accounts.google.com/.well-known/openid-configuration"
-oauth.register(
-    name="google",
-    client_id=OAuth_20["web"]["client_id"],
-    client_secret=OAuth_20["web"]["client_secret"],
-    authorize_url="https://accounts.google.com/o/oauth2/auth",
-    authorize_params=None,
-    access_token_url="https://accounts.google.com/o/oauth2/token",
-    refresh_token_url=None,
-    redirect_uri="http://localhost:8000/login/callback",
-    client_kwargs={"scope": "openid profile email"},
+config = {
+    "web": {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uris": [REDIRECT_URI],
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://accounts.google.com/o/oauth2/token",
+    }
+}
+
+flow = InstalledAppFlow.from_client_config(
+    config,
+    scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"]
 )
 
 
 @router.get("/login")
 async def login(request: Request):
-    redirect_uri = request.url_for("callback")
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    flow.redirect_uri = REDIRECT_URI
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        prompt='consent',
+        include_granted_scopes='true'
+    )
+    response = RedirectResponse(authorization_url)
+    response.set_cookie("oauth_state", state, max_age=3600,
+                        httponly=True)  # state 값을 쿠키에 저장, 1시간 뒤에 쿠키 만료
+    return response
 
 
 @router.get("/login/callback")
-async def callback(request: Request, invite_code: str):
-    token = await oauth.google.authorize_access_token(request)
-    user = await oauth.google.parse_id_token(request, token)
+async def callback(request: Request, state: str = "", code: str = "", db: Session = Depends(get_db)):
+    # 쿠키에서 state 값을 가져옴
+    expected_state = request.cookies.get("oauth_state")
 
-    # 여기서 user 정보와 invite_code를 사용하여 사용자 가입 로직을 처리합니다.
+    if not expected_state:
+        raise HTTPException(status_code=400, detail="State cookie is missing.")
+    if state != expected_state:
+        raise HTTPException(status_code=400, detail="MismatchingStateError")
 
-    # 예시:
-    if is_valid_invite_code(invite_code):
-        create_new_user(user["email"], user["name"], invite_code)
-        return {"message": "Successfully registered with Google and invite code"}
-    else:
-        raise HTTPException(status_code=400, detail="Invalid invite code")
+    flow.fetch_token(code=code)
+
+    credentials = flow.credentials
+    token_info = id_token.verify_oauth2_token(
+        credentials.id_token, google_requests.Request(), GOOGLE_CLIENT_ID
+    )
+
+    existing_user = db.query(User).filter(
+        User.email == token_info["email"]).first()
+
+    # 이미 가입된 사용자인 경우
+    if existing_user and existing_user.username:
+        return {"message": "Successfully logged in!", "redirect": "profile_page_url"}
+
+    # 가입되지 않은 사용자인 경우
+    invited_users = get_users_by_invited_email(token_info["email"], db)
+    if not invited_users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Not invited account")
+
+    # 가입 페이지로 리디렉션
+    return {"message": "Please complete registration", "redirect": "signup_page_url"}
 
 
-def get_user_by_invite_code(db: session, invite_code: str) -> Optional[User]:
+def delete_invited_email(email: str, db: Session = Depends(get_db)):
     """
-    데이터베이스에서 주어진 초대 코드에 해당하는 사용자를 반환합니다.
-    만약 해당 사용자를 찾을 수 없다면 None을 반환합니다.
+    데이터베이스에서 주어진 이메일 주소를 invited_emails 테이블에서 삭제합니다.
     """
-    return db.query(User).filter(User.invite_code == invite_code).first()
+    db.query(InvitedEmail).filter(InvitedEmail.invitee_email == email).delete()
+    db.commit()
 
 
-def is_valid_invite_code(db: session, invite_code: str) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
+def create_new_user(email: str, name: str, inviter_id: int, db: Session = Depends(get_db)):
+    # Create a new user
+    new_user = User(email=email, name=name, invited_by=inviter_id)
+    db.add(new_user)
+    db.commit()
+
+    # Add an entry to the invite_history table
+    create_new_invite_history(inviter_id, new_user.user_id)
+
+    # Remove the invite from the invited_emails table
+    delete_invited_email(db, email)
+
+
+def create_new_invite_history(inviter_id: int, invitee_id: int, db: Session = Depends(get_db)):
     """
-    초대 코드의 유효성을 검사하고, 
-    해당 유저의 user_id, username, profile_picture를 반환합니다.
+    Adds a new invite history record to the database.
     """
-    user = get_user_by_invite_code(db, invite_code)
-    if user:
-        return True, user.user_id, user.username, user.profile_picture
-    else:
-        return False, None, None, None
+    history = InviteHistory(inviter_id=inviter_id, invitee_id=invitee_id)
+    db.add(history)
+    db.commit()
 
 
-def create_new_user(email: str, name: str, invite_code: str):
-    # 사용자 생성 로직
-    pass
+def get_users_by_invited_email(email: str, db: Session) -> List[InvitedEmail]:
+    """
+    데이터베이스에서 주어진 이메일 주소와 일치하는 초대된 사용자 목록을 반환합니다.
+    """
+    return db.query(InvitedEmail).filter(InvitedEmail.invitee_email == email).all()

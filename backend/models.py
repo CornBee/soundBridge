@@ -9,16 +9,22 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True)
     username = Column(String(255), nullable=False, unique=True)
-    password = Column(String(255), nullable=False)  # Hashed & Salted
     email = Column(String(255), nullable=False, unique=True)
     # This can be a link to the image or blob data
     profile_picture = Column(String(255))
     one_line_intro = Column(String(255))
-    invite_code = Column(String(255), unique=True)
     invited_by = Column(Integer, ForeignKey('users.user_id'))
 
     # This establishes a relationship for easily accessing who invited this user
     inviter = relationship("User", remote_side=[user_id])
+
+
+class InvitedEmail(Base):
+    __tablename__ = "invited_emails"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    invitee_email = Column(String(255), nullable=False)
+    invited_by = Column(Integer, ForeignKey('users.user_id'))
 
 
 class SNSLink(Base):

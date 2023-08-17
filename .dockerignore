@@ -1,0 +1,11 @@
+# Git 관련 파일 및 디렉토리
+.git
+.gitignore
+README.md
+
+# vscode 관련 파일
+.vscode/
+
+# 파이썬 관련 무시 항목
+__pycache__/
+*.pyc

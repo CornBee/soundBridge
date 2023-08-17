@@ -28,3 +28,11 @@ for _ in range(MAX_RETRIES):
 else:
     raise Exception(
         "Could not establish a connection to the database after multiple retries.")
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

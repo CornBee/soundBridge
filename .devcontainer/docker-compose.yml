@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: .devcontainer/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+    volumes:
+      - ../backend:/app # 개발 끝나고 지울 것
+
+  db:
+    env_file:
+      - ../.env
+    image: mysql:8.0.32
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3307:3306" # 배포 전 삭제할 것
+
+volumes:
+  db-data:
