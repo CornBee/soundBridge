@@ -11,15 +11,13 @@ COPY .devcontainer/backend/requirements.txt /tmp/
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # Install Google Chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update -y \
-    && apt-get install -y google-chrome-stable
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt -y install ./google-chrome-stable_current_amd64.deb
 
 # Install ChromeDriver
-RUN wget https://chromedriver.storage.googleapis.com/VERSION_NUMBER/chromedriver_linux64.zip \
-    && unzip chromedriver_linux64.zip -d /usr/bin \
-    && chmod +x /usr/bin/chromedriver
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip \
+    && mkdir -p /usr/src/chrome \
+    && unzip /tmp/chromedriver.zip chromedriver -d /usr/src/chrome
 
 COPY backend/ /app/
 
