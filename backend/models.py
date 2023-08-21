@@ -1,15 +1,29 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship, declarative_base
 import datetime
+from pydantic import BaseModel
+from typing import List, Optional
 
 Base = declarative_base()
 
+# api용
+class SNSLinkCreate(BaseModel):
+    platform: str
+    link_url: str
 
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    profile_picture: Optional[str]
+    one_line_intro: Optional[str]
+    sns_links: List[SNSLinkCreate]
+
+# database용
 class User(Base):
     __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True)
-    username = Column(String(255), nullable=False, unique=True)
+    username = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     # This can be a link to the image or blob data
     profile_picture = Column(String(255))

@@ -41,7 +41,7 @@ def insert_test_data():
 async def main():
     session = SessionLocal()
     try:
-        result = await get_top_track_id("락스타지망생", "3", session)
+        result = await get_top_track_id("락스타지망생", "7", session)
         print(result)
     finally:
         session.close()

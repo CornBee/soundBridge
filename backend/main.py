@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
-from routes import router
+from routes import router as routes_router 
+from auth import router as auth_router 
 from config import middlewareKey
-
 from test import insert_test_data
 
 app = FastAPI()
@@ -10,7 +10,8 @@ app = FastAPI()
 secret_key = middlewareKey
 app.add_middleware(SessionMiddleware, secret_key=secret_key)
 
-app.include_router(router)
+app.include_router(routes_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def read_root():
@@ -29,5 +30,5 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    insert_test_data()
+    # insert_test_data()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
