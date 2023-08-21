@@ -1,21 +1,21 @@
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 from config import DATABASE_URL
+from models import Base, User, InvitedEmail, SNSLink, InviteHistory, TourDates, PageViews, MusicIntro, LinkFlow
 
-Base = declarative_base()
-
-MAX_RETRIES = 3
+MAX_RETRIES = 10
 RETRY_INTERVAL = 10  # seconds
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+Base.metadata.create_all(bind=engine)
+
 # 데이터베이스 연결 재시도 로직
 for _ in range(MAX_RETRIES):
     try:
-        # 이 연결 시도는 DB가 준비되었는지 확인하기 위한 것입니다.
         connection = engine.connect()
         connection.close()
         print("Successfully connected to the database.")

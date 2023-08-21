@@ -1,7 +1,18 @@
 version: "3"
 
 services:
+  db:
+    image: mysql:8.0.32
+    env_file:
+      - ../.env.db
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3307:3306" # 배포 전 삭제할 것
+
   backend:
+    env_file:
+      - ../.env.backend
     build:
       context: ..
       dockerfile: .devcontainer/backend/Dockerfile
@@ -15,14 +26,17 @@ services:
     volumes:
       - ../backend:/app # 개발 끝나고 지울 것
 
-  db:
+  frontend:
     env_file:
-      - ../.env
-    image: mysql:8.0.32
+      - ../.env.frontend
+    build:
+      context: ..
+      dockerfile: .devcontainer/frontend/Dockerfile
     volumes:
-      - db-data:/var/lib/mysql
+      - ../frontend:/app
+      - /app/node_modules
     ports:
-      - "3307:3306" # 배포 전 삭제할 것
+      - "8080:8080"
 
 volumes:
   db-data:

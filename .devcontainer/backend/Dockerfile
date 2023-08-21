@@ -10,8 +10,18 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 COPY .devcontainer/backend/requirements.txt /tmp/
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
+# Install Google Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update -y \
+    && apt-get install -y google-chrome-stable
+
+# Install ChromeDriver
+RUN wget https://chromedriver.storage.googleapis.com/VERSION_NUMBER/chromedriver_linux64.zip \
+    && unzip chromedriver_linux64.zip -d /usr/bin \
+    && chmod +x /usr/bin/chromedriver
+
 COPY backend/ /app/
-COPY .env .env
 
 WORKDIR /app
 CMD ["python3", "main.py"]

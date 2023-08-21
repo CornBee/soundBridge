@@ -9,3 +9,7 @@ README.md
 # 파이썬 관련 무시 항목
 __pycache__/
 *.pyc
+
+# vue.js 관련 무시 항목
+node_modules
+npm-debug.log

@@ -1,0 +1,17 @@
+{
+  "name": "Ubuntu_frontend",
+  "build": {
+    "dockerfile": "Dockerfile",
+    // 아래의 VARIANT는 Ubuntu 버전을 선택하기 위한 것입니다.
+    // focal (ubuntu-20.04)가 가장 일반적으로 사용되는 LTS 버전입니다.
+    "args": { "VARIANT": "focal" }
+  },
+
+  // 프론트엔드 개발에서는 특정 포트 (예: Vue.js의 기본 포트인 8080)를
+  // 로컬 환경에서 사용할 수 있게 포워딩하는 것이 일반적입니다.
+  "forwardPorts": [8080],
+
+  // 컨테이너 생성 후 원하는 명령어를 실행하려면 'postCreateCommand'를 사용합니다.
+  // 예를 들어, Vue 프로젝트를 바로 실행하려면 아래와 같이 설정할 수 있습니다.
+  "postCreateCommand": "npm run serve"
+}

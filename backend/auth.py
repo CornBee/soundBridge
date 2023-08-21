@@ -1,16 +1,15 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, status, Depends
 from fastapi.responses import RedirectResponse
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport import requests as google_requests
 from sqlalchemy.orm import Session
-from config import GOOGLE_CLIENT_ID, REDIRECT_URI, GOOGLE_CLIENT_SECRET
+from config import GOOGLE_CLIENT_ID, REDIRECT_URI, GOOGLE_CLIENT_SECRET, GOOGLE_TOKEN_URI, GOOGLE_AUTH_URI
 from database import get_db
 from models import User, InvitedEmail, InviteHistory
 import os
 from typing import List
-
-router = APIRouter()
+from routes import router
 
 # Google Oauth2 설정 값을 환경변수로부터 불러옵니다.
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -20,14 +19,15 @@ config = {
         "client_id": GOOGLE_CLIENT_ID,
         "client_secret": GOOGLE_CLIENT_SECRET,
         "redirect_uris": [REDIRECT_URI],
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://accounts.google.com/o/oauth2/token",
+        "auth_uri": GOOGLE_AUTH_URI,
+        "token_uri": GOOGLE_TOKEN_URI,
     }
 }
 
 flow = InstalledAppFlow.from_client_config(
     config,
-    scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"]
+    scopes=["openid", "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile"]
 )
 
 
@@ -67,7 +67,7 @@ async def callback(request: Request, state: str = "", code: str = "", db: Sessio
 
     # 이미 가입된 사용자인 경우
     if existing_user and existing_user.username:
-        return {"message": "Successfully logged in!", "redirect": "profile_page_url"}
+        return RedirectResponse(url="/profile")
 
     # 가입되지 않은 사용자인 경우
     invited_users = get_users_by_invited_email(token_info["email"], db)
@@ -75,8 +75,12 @@ async def callback(request: Request, state: str = "", code: str = "", db: Sessio
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Not invited account")
 
-    # 가입 페이지로 리디렉션
-    return {"message": "Please complete registration", "redirect": "signup_page_url"}
+    # 초대된 사용자 정보를 기반으로 새로운 사용자를 생성합니다.
+    invited_by = invited_users[0].invited_by  # 초대한 사람의 ID
+    create_new_user(
+        email=token_info["email"], name=token_info["name"], inviter_id=invited_by, db=db)
+
+    return RedirectResponse(url="/profile")
 
 
 def delete_invited_email(email: str, db: Session = Depends(get_db)):
@@ -89,15 +93,15 @@ def delete_invited_email(email: str, db: Session = Depends(get_db)):
 
 def create_new_user(email: str, name: str, inviter_id: int, db: Session = Depends(get_db)):
     # Create a new user
-    new_user = User(email=email, name=name, invited_by=inviter_id)
+    new_user = User(email=email, username=name, invited_by=inviter_id)
     db.add(new_user)
     db.commit()
 
     # Add an entry to the invite_history table
-    create_new_invite_history(inviter_id, new_user.user_id)
+    create_new_invite_history(inviter_id, new_user.user_id, db)
 
     # Remove the invite from the invited_emails table
-    delete_invited_email(db, email)
+    delete_invited_email(email, db)
 
 
 def create_new_invite_history(inviter_id: int, invitee_id: int, db: Session = Depends(get_db)):
