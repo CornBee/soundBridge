@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends python3-pip pkg-config libmysqlclient-dev python3-dev
+    && apt-get -y install --no-install-recommends python3-pip pkg-config libmysqlclient-dev python3-dev wget unzip curl
 
 # Install Python packages from requirements.txt
 COPY .devcontainer/backend/requirements.txt /tmp/
@@ -12,10 +12,12 @@ RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # Install Google Chrome
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get update && apt-get install -f \
     && apt -y install ./google-chrome-stable_current_amd64.deb
 
 # Install ChromeDriver
-RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip \
+RUN LATEST_CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE` && \
+    wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/$LATEST_CHROMEDRIVER_VERSION/chromedriver_linux64.zip \
     && mkdir -p /usr/src/chrome \
     && unzip /tmp/chromedriver.zip chromedriver -d /usr/src/chrome
 
