@@ -6,7 +6,7 @@ from google.auth.transport import requests as google_requests
 from sqlalchemy.orm import Session
 from config import GOOGLE_CLIENT_ID, REDIRECT_URI, GOOGLE_CLIENT_SECRET, GOOGLE_TOKEN_URI, GOOGLE_AUTH_URI
 from database import get_db
-from models import User, InvitedEmail, InviteHistory, UserCreate, SNSLinkCreate
+from models import User, InvitedEmail, InviteHistory, UserCreate, SNSLink
 import os
 from typing import List
 
