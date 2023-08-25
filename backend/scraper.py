@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from models import User
+from database import SessionLocal
 import time
 import re
 
@@ -17,8 +19,6 @@ def get_soundcloud_track_id(url: str):
     options.path = '../usr/src/chrome/chromedriver'
 
     driver = webdriver.Chrome(options)
-    
-    url = 'https://soundcloud.com/adoyband'
     driver.get(url + "/popular-tracks")
     
     try:
@@ -59,3 +59,29 @@ def get_soundcloud_track_id(url: str):
 
     finally:
         driver.quit()
+
+def update_soundcloud_track_id(user_id: int, track_id: int):
+    """Updates the soundcloud_track_id for a specific user in the database."""
+    # Create a new session
+    session = SessionLocal()
+
+    try:
+        # Query the user by user_id
+        user = session.query(User).filter(User.user_id == user_id).one_or_none()
+        if not user:
+            print(f"No user found with id {user_id}")
+            return
+
+        # Update the user's soundcloud_track_id
+        user.soundcloud_track_id = track_id
+
+        # Commit the changes
+        session.commit()
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        session.rollback()
+
+    finally:
+        session.close()
+

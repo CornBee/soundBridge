@@ -2,8 +2,7 @@
 from models import User, InvitedEmail
 from database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
-from routes import get_top_track_id
-import asyncio
+from apis import get_album_artwork
 
 def insert_test_data():
     db = SessionLocal()
@@ -30,6 +29,8 @@ def insert_test_data():
         db.commit()
         print("Invitee created successfully.")  # 로깅 추가
 
+        
+
     except SQLAlchemyError as e:
         print(f"An error occurred: {e}")  # 에러 메시지 출력
         db.rollback()  # 롤백 수행
@@ -37,14 +38,5 @@ def insert_test_data():
     finally:
         db.close()
 
-
-async def main():
-    session = SessionLocal()
-    try:
-        result = await get_top_track_id("락스타지망생", "7", session)
-        print(result)
-    finally:
-        session.close()
-
-asyncio.run(main())
+print(get_album_artwork(3))
 

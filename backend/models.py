@@ -29,6 +29,7 @@ class User(Base):
     profile_picture = Column(String(255))
     one_line_intro = Column(String(255))
     invited_by = Column(Integer, ForeignKey('users.user_id'))
+    soundcloud_track_id = Column(Integer, nullable=True)  # 가장 인기 있는 SoundCloud의 Track ID
 
     # This establishes a relationship for easily accessing who invited this user
     inviter = relationship("User", remote_side=[user_id])

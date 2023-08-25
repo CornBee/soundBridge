@@ -25,3 +25,10 @@ GOOGLE_AUTH_PROVIDER_X509_CERT_URL = os.environ.get(
 
 # DATABASE_URL 구성
 DATABASE_URL = f"mysql+mysqldb://{MYSQL_USER}:{MYSQL_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{MYSQL_DATABASE}?charset=utf8mb4"
+
+# storage 구성
+STORAGE_BACKEND=os.environ.get('STORAGE_BACKEND', 'local')
+
+# spotify api 용 환경 변수
+SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')

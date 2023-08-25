@@ -3,7 +3,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from routes import router as routes_router 
 from auth import router as auth_router 
 from config import middlewareKey
-from test import insert_test_data
 
 app = FastAPI()
 
