@@ -11,6 +11,8 @@ SoundBridge is an innovative AI-powered music creation and collaboration platfor
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
+- [Testing](#testing)
+- [Code Quality](#code-quality)
 - [CI/CD](#cicd)
 - [Contributing](#contributing)
 - [License](#license)
@@ -38,7 +40,7 @@ SoundBridge is an innovative AI-powered music creation and collaboration platfor
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/yourusername/soundBridge.git
+   git clone https://github.com/CornBee/soundBridge.git
    cd soundBridge
    ```
 
@@ -112,6 +114,7 @@ Once the application is running, you can access it via your web browser. The fro
 ### Collaboration
 - Search for other musicians on the platform and collaborate on music projects.
 - Use built-in tools to communicate and share work seamlessly.
+
 ## Project Structure
 
 ```plaintext
@@ -119,57 +122,36 @@ soundBridge/
 │
 ├── backend/
 │   ├── alembic/
-│   │   └── versions/
-│   │       └── b58e74009c38_initial_migration.py
 │   ├── auth.py
 │   ├── database.py
 │   ├── main.py
 │   ├── models.py
 │   ├── routes.py
-│   ├── ai_music_generator.py  # New file for AI music generation logic
-│   ├── collaboration_service.py  # New file for collaboration features
+│   ├── ai_music_generator.py
+│   ├── collaboration_service.py
 │   └── requirements.txt
 │
 ├── frontend/
 │   ├── public/
-│   │   ├── favicon.ico
-│   │   └── index.html
 │   ├── src/
 │   │   ├── assets/
-│   │   │   └── logo.png
 │   │   ├── components/
-│   │   │   ├── RadialMindMap.vue  # New component for mind map interface
-│   │   │   └── AudioEditor.vue  # New component for audio editing
+│   │   │   ├── RadialMindMap.vue
+│   │   │   └── AudioEditor.vue
 │   │   ├── views/
 │   │   ├── store/
-│   │   │   └── index.js
-│   │   ├── views/
-│   │   │   ├── AboutView.vue
-│   │   │   └── HomeView.vue
 │   │   ├── App.vue
 │   │   └── main.js
-│   ├── .editorconfig
-│   ├── babel.config.js
-│   ├── jsconfig.json
-│   ├── package-lock.json
-│   ├── package.json
-│   └── vue.config.js
+│   └── package.json
 │
 ├── .devcontainer/
 │
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml  # Continuous Integration workflow
-│       └── cd.yml  # Continuous Deployment workflow
+│       ├── ci.yml
+│       └── cd.yml
 │
 ├── tests/
-│   ├── backend/
-│   │   ├── Dockerfile
-│   │   └── devcontainer.json
-│   ├── frontend/
-│   │   ├── Dockerfile
-│   │   └── devcontainer.json
-│   └── docker-compose.yml
 │
 ├── .dockerignore
 ├── .gitignore
@@ -183,18 +165,62 @@ soundBridge/
 4. Submit pull requests for code reviews before merging into the main branch.
 5. Regularly update the project board and documentation.
 
+## Testing
+We use Jest for automated testing of our JavaScript code. To run the tests:
+
+1. Ensure you have all dependencies installed:
+   ```
+   npm install
+   ```
+2. Run the tests:
+   ```
+   npm test
+   ```
+3. To run tests with coverage report:
+   ```
+   npm run test:coverage
+   ```
+
+Our CI pipeline automatically runs these tests on every push and pull request.
+
+## Code Quality
+We use SonarCloud for continuous code quality inspection. You can view our project's current status and issues here:
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CornBee_soundBridge&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CornBee_soundBridge)
+
+[SonarCloud Issues](https://sonarcloud.io/project/issues?impactSoftwareQualities=MAINTAINABILITY&resolved=false&id=CornBee_soundBridge&open=AZB2oZiyJxGXGwmBKkpI)
+
+We strive to maintain high code quality and address issues promptly. Contributors are encouraged to check SonarCloud before submitting pull requests.
+
 ## CI/CD
 We use GitHub Actions for continuous integration and deployment:
-- **CI**: Automatically runs tests, linting, and builds on every push and pull request.
+- **CI**: Automatically runs tests, linting, and builds on every push and pull request. This includes running our Jest tests and submitting results to SonarCloud for analysis.
 - **CD**: Deploys to staging environment on merges to the develop branch, and to production on merges to the main branch.
 
 ## Contributing
-This project is currently personal. For future collaboration possibilities, please contact cornbee80014@gmail.com.
+We welcome contributions to SoundBridge! If you're interested in helping out, here's how you can contribute:
+
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/AmazingFeature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+5. Push to the branch (`git push origin feature/AmazingFeature`)
+6. Open a Pull Request
+
+Please make sure to update tests as appropriate and adhere to the code quality standards enforced by SonarCloud.
+
+For major changes, please open an issue first to discuss what you would like to change. Please ensure to update tests and documentation as appropriate.
 
 ## License
 This project is licensed under the MIT License.
 
 ## Acknowledgements
-- [FastAPI](https://fastapi.tiangolo.com/) for the backend framework.
-- [Vue.js](https://vuejs.org/) for the frontend framework.
-- [Google OAuth2](https://developers.google.com/identity/protocols/oauth2) for secure authentication.
+- [FastAPI](https://fastapi.tiangolo.com/) for the backend framework
+- [Vue.js](https://vuejs.org/) for the frontend framework
+- [Google OAuth2](https://developers.google.com/identity/protocols/oauth2) for secure authentication
+- [Jest](https://jestjs.io/) for JavaScript testing
+- [SonarCloud](https://sonarcloud.io/) for code quality analysis
+- [GitHub Actions](https://github.com/features/actions) for CI/CD
+- [Docker](https://www.docker.com/) for containerization
+- [Alembic](https://alembic.sqlalchemy.org/) for database migrations
+- [D3.js](https://d3js.org/) for data visualization (if used for the mind map interface)
